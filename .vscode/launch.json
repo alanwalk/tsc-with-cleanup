@@ -13,15 +13,15 @@
             ],
             "program": "${workspaceFolder}\\dist\\bin.js",
             "args": [
-                "--src",
+                "-s",
                 "src",
-                "--dist",
+                "-d",
                 "dist",
                 "-w",
                 "-rd",
                 "-v",
-                "-et",
-                "false"
+                "-e",
+                "aaa"
             ],
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"

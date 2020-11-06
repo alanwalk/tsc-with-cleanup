@@ -9,13 +9,14 @@ const srcTypePattern = /^(.*)\.ts$/;
 const distTypePattern = /^(.*)\.d\.ts$/;
 const distTypeJsPattern = /^(.*)\.js$/;
 
-export function watch(src : string, dist : string, removeDirs : boolean, verbose : boolean) {
+export function watch(src : string, dist : string, exclude : string[], removeDirs : boolean, verbose : boolean) {
     chokidar
         .watch(src, {
             persistent: true,
             cwd: src,
         })
         .on("unlink", filename => {
+            if (exclude.indexOf(filename) >= 0) return;
             // Check if it was a typescript file
             const match = filename.match(srcTypePattern);
             if (match) {
@@ -31,20 +32,22 @@ export function watch(src : string, dist : string, removeDirs : boolean, verbose
         })
         .on('unlinkDir', dir => {
             if (removeDirs) {
+                if (exclude.indexOf(dir) >= 0) return;
                 let fullDir = path.join(dist, dir);
                 fs.rmdirSync(fullDir, { recursive: true });
                 if (verbose) console.log(`Removed "${colors.yellow(fullDir)}"`);
             }
-        });;
+        });
     if (verbose) console.log(`Watching in "${src}"`);
 };
 
-export function clean(src : string, dist : string, ifTsDecl : boolean, verbose : boolean) {
+export function clean(src : string, dist : string, exclude : string[], ifTsDecl : boolean, verbose : boolean) {
     // Define a recursive method for scanning and cleaning a directory
     const readDir = (dirPath : string) => {
         // Get and read the files in the directory
         const files = fs.readdirSync(dirPath);
         files.forEach(file => {
+            if (exclude.indexOf(file) >= 0) return;
             const filename = path.join(dirPath, file);
 
             // Check if this file is a directory or not, and if it is; recurse

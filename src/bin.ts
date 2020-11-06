@@ -11,6 +11,7 @@ commander
     .version(pkg.version, "-V, --version", "output the current version")
     .option("-s, --src <srcDir>", "sets the source folder with ts files (auto load from tsconfig.json)", "src")
     .option("-d, --dist <distDir>", "sets the distribution folder with js files (auto load from tsconfig.json)", "dist")
+    .option("-e, --exclude [relativePath...]", "files to exclude on remove")
     .option("-w, --watch", "whether to watch for files being deleted (disabled by default)", false)
     .option("-v, --verbose", "Whether to show messages (disabled by default)", false)
     .option("-if, --ifDeclared", "If set to true, js files in dist will only be removed if a file with the same name and a .d.ts extension is also present (disabled by default)", false)
@@ -40,10 +41,10 @@ function main() {
     tscWithCleanup.execTsc(getTscOpt())
 
     // Clean the directory
-    tscWithCleanup.clean(src, dist, opts.ifDeclared, opts.verbose);
+    tscWithCleanup.clean(src, dist, opts.exclude, opts.ifDeclared, opts.verbose);
 
     // Check whether we should continue checking for chnages
-    if (opts.watch) tscWithCleanup.watch(src, dist, opts.removeDirs, opts.verbose);
+    if (opts.watch) tscWithCleanup.watch(src, dist, opts.exclude, opts.removeDirs, opts.verbose);
 }
 
 main()
