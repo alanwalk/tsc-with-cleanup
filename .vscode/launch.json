@@ -15,13 +15,14 @@
             "args": [
                 "-s",
                 "src",
+                "-e",
+                "aaa",
+                "bbb",
                 "-d",
                 "dist",
                 "-w",
                 "-rd",
-                "-v",
-                "-e",
-                "aaa"
+                "-v"
             ],
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
