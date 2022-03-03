@@ -42,8 +42,8 @@
     "chokidar": "^3.4.2",
     "colors": "^1.4.0",
     "commander": "^6.2.0",
-        "cross-spawn": "^7.0.3",
-        "tsconfig-resolver": "^3.0.1"
+    "cross-spawn": "^7.0.3",
+    "tsconfig-resolver": "^3.0.1"
   },
   "devDependencies": {
     "@types/chokidar": "^2.1.3",
