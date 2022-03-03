@@ -1,21 +1,26 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import * as chokidar from 'chokidar';
-import * as colors from 'colors';
+import * as path from "path";
+import * as fs from "fs";
+import * as chokidar from "chokidar";
+import * as colors from "colors";
 import { spawn } from "cross-spawn";
 import * as readline from "readline";
+import { CacheStrategy, tsconfigResolverSync } from "tsconfig-resolver";
 
 const srcTypePattern = /^(.*)\.ts$/;
 const distTypePattern = /^(.*)\.d\.ts$/;
 const distTypeJsPattern = /^(.*)\.js$/;
 
-export function watch(src : string, dist : string, exclude : string[], removeDirs : boolean, verbose : boolean) {
+const tsconfigName = "tsconfig.json";
+const tsconfigFilePath = "./tsconfig.json";
+const referencesPath = "references";
+
+export function watch(src: string, dist: string, exclude: string[], removeDirs: boolean, verbose: boolean) {
     chokidar
         .watch(src, {
             persistent: true,
             cwd: src,
         })
-        .on("unlink", filename => {
+        .on("unlink", (filename) => {
             if (exclude.indexOf(filename) >= 0) return;
             // Check if it was a typescript file
             const match = filename.match(srcTypePattern);
@@ -30,7 +35,7 @@ export function watch(src : string, dist : string, exclude : string[], removeDir
                 if (verbose) console.log(`Removed "${match[1]}" from dist`);
             }
         })
-        .on('unlinkDir', dir => {
+        .on("unlinkDir", (dir) => {
             if (removeDirs) {
                 if (exclude.indexOf(dir) >= 0) return;
                 let fullDir = path.join(dist, dir);
@@ -39,14 +44,61 @@ export function watch(src : string, dist : string, exclude : string[], removeDir
             }
         });
     if (verbose) console.log(`Watching in "${src}"`);
-};
+}
 
-export function clean(src : string, dist : string, exclude : string[], ifTsDecl : boolean, verbose : boolean) {
+export function monoRepoClean(
+    modulePath: string,
+    src: string,
+    dist: string,
+    exclude: string[],
+    ifTsDecl: boolean,
+    verbose: boolean,
+    cleanedModule: string[]
+) {
+    let tsconfigPath = path.resolve(modulePath, tsconfigFilePath);
+    if (!fs.existsSync(tsconfigPath)) {
+        return;
+    }
+    if (cleanedModule.indexOf(modulePath) != -1) {
+        return;
+    }
+
+    let moduleSrc = path.resolve(modulePath, src);
+    let moduleDist = path.resolve(modulePath, dist);
+    clean(moduleSrc, moduleDist, exclude, ifTsDecl, verbose);
+    cleanedModule.push(modulePath);
+
+    let tsconfig = getTSConfig(modulePath);
+    let references = tsconfig && tsconfig[referencesPath];
+    if (references == undefined) {
+        return;
+    }
+    for (const reference of references) {
+        let depedencePath = path.resolve(modulePath, reference.path);
+        monoRepoClean(depedencePath, src, dist, exclude, ifTsDecl, verbose, cleanedModule);
+    }
+}
+
+function getTSConfig(repoDir: string) {
+    try {
+        const result = tsconfigResolverSync({
+            cwd: repoDir,
+            searchName: tsconfigName,
+            cache: CacheStrategy.Directory,
+        });
+        return result?.config;
+    } catch (error) {
+        console.error(error);
+        return undefined;
+    }
+}
+
+export function clean(src: string, dist: string, exclude: string[], ifTsDecl: boolean, verbose: boolean) {
     // Define a recursive method for scanning and cleaning a directory
-    const readDir = (dirPath : string) => {
+    const readDir = (dirPath: string) => {
         // Get and read the files in the directory
         const files = fs.readdirSync(dirPath);
-        files.forEach(file => {
+        files.forEach((file) => {
             if (exclude.indexOf(file) >= 0) return;
             const filename = path.join(dirPath, file);
 
@@ -69,14 +121,10 @@ export function clean(src : string, dist : string, exclude : string[], ifTsDecl 
                             fs.existsSync(srcPath + ".tsx")
                         )
                     ) {
-                        if (fs.existsSync(extLess + ".js"))
-                            fs.unlinkSync(extLess + ".js");
-                        if (fs.existsSync(extLess + ".js.map"))
-                            fs.unlinkSync(extLess + ".js.map");
-                        if (fs.existsSync(extLess + ".d.ts"))
-                            fs.unlinkSync(extLess + ".d.ts");
-                        if (fs.existsSync(extLess + ".d.ts.map"))
-                            fs.unlinkSync(extLess + ".d.ts.map");
+                        if (fs.existsSync(extLess + ".js")) fs.unlinkSync(extLess + ".js");
+                        if (fs.existsSync(extLess + ".js.map")) fs.unlinkSync(extLess + ".js.map");
+                        if (fs.existsSync(extLess + ".d.ts")) fs.unlinkSync(extLess + ".d.ts");
+                        if (fs.existsSync(extLess + ".d.ts.map")) fs.unlinkSync(extLess + ".d.ts.map");
 
                         if (verbose) console.log(`Removed "${relPath}" from dist`);
                     }
@@ -88,18 +136,20 @@ export function clean(src : string, dist : string, exclude : string[], ifTsDecl 
     // Start cleaning the root directory
     readDir(dist);
 
-    if (verbose) console.log(`Cleaned "${dist}"`);
-};
+    console.log(`Cleaned "${dist}"`);
+}
 
-export function execTsc(opts : string[]) {
-    let tsc : string = "";
+export function execTsc(opts: string[]) {
+    let tsc: string = "";
     try {
-        tsc = require.resolve("typescript/bin/tsc")
+        tsc = require.resolve("typescript/bin/tsc");
     } catch (error) {
-        console.error(error.message);
+        // console.error(error.message);
         process.exit(1);
     }
     const tscProcess = spawn("node", [tsc, ...opts]);
     const rl = readline.createInterface({ input: tscProcess.stdout });
-    rl.on("line", function (input) { console.log(input); });
+    rl.on("line", function (input) {
+        console.log(input);
+    });
 }
