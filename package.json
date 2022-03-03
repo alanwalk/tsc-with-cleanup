@@ -1,6 +1,6 @@
 {
   "name": "tsc-with-cleanup",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "A simple script that that can be used to cleanup previously transpiled typescript files.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,7 +42,8 @@
     "chokidar": "^3.4.2",
     "colors": "^1.4.0",
     "commander": "^6.2.0",
-    "cross-spawn": "^7.0.3"
+    "cross-spawn": "^7.0.3",
+    "tsconfig-resolver": "^3.0.1"
   },
   "devDependencies": {
     "@types/chokidar": "^2.1.3",

@@ -8,25 +8,23 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}\\dist\\bin.js",
             "args": [
+                "-b",
+                "./dist/package/editor/",
                 "-s",
-                "src",
+                "./src",
                 "-e",
                 "aaa",
                 "bbb",
                 "-d",
-                "dist",
-                "-w",
+                "./dist",
                 "-rd",
-                "-v"
+                "-v",
+                "-w"
             ],
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*.js"
-            ]
+            "outFiles": ["${workspaceFolder}/dist/**/*.js"]
         }
     ]
 }
