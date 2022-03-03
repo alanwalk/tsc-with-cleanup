@@ -1,6 +1,6 @@
 {
   "name": "tsc-with-cleanup",
-    "version": "0.2.0",
+  "version": "0.2.0",
   "description": "A simple script that that can be used to cleanup previously transpiled typescript files.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
